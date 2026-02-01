@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flappy Giant - poolix</title>
+    <title>Poolix Fly Mamae</title>
     <style>
         :root {
             --primary: #3498db;
             --bg: #0f172a;
-            --surface: #1e293b;
             --accent: #f43f5e;
             --gold: #fbbf24;
         }
@@ -53,16 +52,15 @@
             z-index: 5;
         }
         .score-container {
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.6);
             backdrop-filter: blur(8px);
-            padding: 5px 25px;
+            padding: 8px 24px;
             border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
         }
-        .score { font-size: 52px; font-weight: 900; color: #fff; text-shadow: 0 4px 12px rgba(0,0,0,0.5); line-height: 1; }
-        .weather-tag { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #60a5fa; font-weight: 800; margin-top: 4px; }
-        .difficulty-tag { font-size: 14px; text-transform: uppercase; letter-spacing: 3px; color: var(--gold); font-weight: 800; margin-bottom: 4px; }
+        .score { font-size: 52px; font-weight: 900; color: #fff; line-height: 1; }
+        .high-score { font-size: 12px; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; margin-top: 4px;}
         
         #overlay {
             position: absolute;
@@ -77,51 +75,47 @@
             padding: 30px;
         }
 
-        /* Screenshot Template Styles */
         #game-over-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            background: #1e293b;
             border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 30px;
             width: 80%;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
             display: none;
             flex-direction: column;
             align-items: center;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popIn 0.4s ease-out;
         }
 
-        @keyframes popIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .card-bird {
-            width: 100px;
-            height: 100px;
-            margin-bottom: 15px;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
-        }
-
-        .card-score-label { font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; }
-        .card-score-val { font-size: 64px; font-weight: 900; color: #fff; margin: 5px 0; }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         .start-btn {
-            background: var(--accent);
-            color: white;
+            background: #fff;
+            color: #000;
             border: none;
             padding: 16px 40px;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 900;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 10px 25px rgba(244, 63, 94, 0.4);
+            transition: 0.2s;
             margin-top: 20px;
-            -webkit-tap-highlight-color: transparent;
+            text-transform: uppercase;
         }
-        .start-btn:hover { transform: translateY(-2px); }
-        .controls-hint { margin-top: 20px; font-size: 13px; color: #475569; font-weight: 500; }
+        .start-btn:hover { transform: scale(1.05); }
+
+        #super-badge {
+            position: absolute;
+            bottom: 20px;
+            background: var(--gold);
+            color: black;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 900;
+            display: none;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -129,29 +123,29 @@
     <div id="game-wrapper">
         <div id="overlay">
             <div id="menu-content">
-                <h2 style="font-size: 42px; margin: 0; background: linear-gradient(to right, #60a5fa, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">FLAPPY GIANT</h2>
-                <p style="color: #94a3b8; margin: 10px 0 30px;">Dynamic Weather Challenge</p>
-                <button class="start-btn" onclick="startGame()">START GAME</button>
-                <div class="controls-hint">Tap or Press Space to Fly</div>
+                <h1 style="font-size: 38px; margin: 0; letter-spacing: -1px;">POOLIX FLY MAMAE</h1>
+                <p style="color: #94a3b8; margin: 10px 0 30px;">Survival of the Girest</p>
+                <button class="start-btn" onclick="startGame()">START OOMBING</button>
             </div>
 
-            <!-- Screenshot Mode Template -->
             <div id="game-over-card">
-                <img id="card-bird-img" class="card-bird" src="bird.png" alt="Bird">
-                <div class="card-score-label">Final Score</div>
-                <div class="card-score-val" id="final-score-val">0</div>
-                <div style="font-size: 12px; color: #475569; margin-bottom: 10px;">VARTA MAMEY DURRRR</div>
-                <button class="start-btn" style="padding: 12px 30px; font-size: 16px;" onclick="startGame()">TRY AGAIN</button>
+                <h2 id="death-msg" style="margin: 0 0 10px; color: #f43f5e;">FLUSHED in KAKKOS! 🚽</h2>
+                <div style="font-size: 14px; color: #94a3b8; text-transform: uppercase;">Final Umbal</div>
+                <div style="font-size: 64px; font-weight: 900;" id="final-score-val">0</div>
+                <div id="best-score-label" style="font-size: 14px; color: var(--gold); margin-bottom: 20px;">BEST: 0</div>
+                <button class="start-btn" onclick="startGame()">Meendum mbal</button>
             </div>
         </div>
 
         <div class="hud">
-            <div class="difficulty-tag" id="difficulty-val">EASY</div>
             <div class="score-container">
                 <div class="score" id="score-val">0</div>
-                <div class="weather-tag" id="weather-val">CLEAR</div>
+                <div class="high-score" id="high-score-val">BEST: 0</div>
+                <div id="weather-label" style="font-size: 10px; margin-top: 5px; opacity: 0.7; letter-spacing: 1px;">DAY / CLEAR</div>
             </div>
         </div>
+
+        <div id="super-badge">GAYNTHI MODE ACTIVE! 🔥</div>
         <canvas id="mainCanvas" width="400" height="600"></canvas>
     </div>
 
@@ -159,72 +153,75 @@
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
     const scoreVal = document.getElementById('score-val');
-    const diffVal = document.getElementById('difficulty-val');
-    const weatherVal = document.getElementById('weather-val');
+    const highScoreVal = document.getElementById('high-score-val');
     const overlay = document.getElementById('overlay');
     const menuContent = document.getElementById('menu-content');
     const gameOverCard = document.getElementById('game-over-card');
     const finalScoreDisplay = document.getElementById('final-score-val');
+    const bestScoreDisplay = document.getElementById('best-score-label');
+    const weatherLabel = document.getElementById('weather-label');
+    const superBadge = document.getElementById('super-badge');
 
-    // --- Sound System ---
+    // Audio
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSfx(freq, type, duration, vol = 0.1) {
+    function playSfx(freq, type, duration, vol = 0.05, slide = true) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(freq/4, audioCtx.currentTime + duration);
+        if(slide) osc.frequency.exponentialRampToValueAtTime(freq/4, audioCtx.currentTime + duration);
         gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + duration);
     }
 
-    const birdImg = new Image();
-    birdImg.src = 'bird.png';
-    let birdLoaded = false;
-    birdImg.onload = () => {
-        birdLoaded = true;
-        document.getElementById('card-bird-img').src = birdImg.src;
-    };
+    // Assets
+    const birdImg = new Image(); birdImg.src = 'bird.png'; 
+    const ajithImg = new Image(); ajithImg.src = 'ajith.png';
 
-    // Game Variables
+    // Game State
     let isPlaying = false;
+    let isDying = false;
     let score = 0;
+    let highScore = 0;
     let frame = 0;
     let entities = [];
-    let particles = [];
+    let powerUps = [];
     let weatherParticles = [];
-    let player = { x: 50, y: 300, w: 130, h: 130, vy: 0 };
-    let difficulty = 1;
-    let weatherMode = 'CLEAR'; // CLEAR, RAIN, STORM
-    let flashOpacity = 0;
+    let player = { x: 80, y: 300, w: 85, h: 85, vy: 0, rot: 0, scale: 1, alpha: 1 };
+    
+    // Power up
+    let superMode = false;
+    let superTimer = 0;
+    
+    // Death Animation State
+    let deathFrame = 0;
+    let toiletX = 200;
+    let toiletY = 700;
 
-    // Input Handling
-    window.addEventListener('keydown', e => {
-        if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) playerJump();
-    });
+    // Atmosphere
+    let timeOfDay = 'day';
+    let weatherType = 'clear';
+
+    window.addEventListener('keydown', e => { if (e.code === 'Space') playerJump(); });
     canvas.addEventListener('mousedown', playerJump);
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        playerJump();
-    }, {passive: false});
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); playerJump(); }, {passive: false});
 
     function playerJump() {
-        if (!isPlaying) return;
-        // Storm mode makes jumping slightly heavier (wind)
-        let jumpPower = weatherMode === 'STORM' ? -7.8 : -8.5;
-        player.vy = jumpPower;
-        playSfx(400, 'triangle', 0.1);
+        if (!isPlaying || isDying) return;
+        player.vy = -7.5;
+        playSfx(450, 'triangle', 0.1);
     }
 
     function resetGame() {
-        score = 0; frame = 0; entities = []; particles = []; weatherParticles = []; 
-        difficulty = 1; weatherMode = 'CLEAR'; flashOpacity = 0;
-        scoreVal.innerText = "0"; diffVal.innerText = "EASY";
-        weatherVal.innerText = "CLEAR";
-        player.y = 200; player.vy = 0;
+        score = 0; frame = 0; entities = []; powerUps = []; weatherParticles = [];
+        superMode = false; superTimer = 0; isDying = false; deathFrame = 0;
+        player.y = 200; player.vy = 0; player.rot = 0; player.scale = 1; player.alpha = 1;
+        scoreVal.innerText = "0";
+        superBadge.style.display = 'none';
+        updateAtmosphere();
     }
 
     function startGame() {
@@ -236,171 +233,242 @@
         requestAnimationFrame(update);
     }
 
-    function gameOver() {
-        if (!isPlaying) return;
+    function triggerDeath() {
+        if (isDying || superMode) return;
+        isDying = true;
+        deathFrame = 0;
+        toiletY = canvas.height + 100;
+        playSfx(100, 'sawtooth', 0.5, 0.2);
+    }
+
+    function showGameOver() {
         isPlaying = false;
-        playSfx(120, 'sawtooth', 0.6, 0.2);
-        
-        // Show Screenshot Template
+        if (score > highScore) highScore = score;
         overlay.style.display = 'flex';
         menuContent.style.display = 'none';
         gameOverCard.style.display = 'flex';
         finalScoreDisplay.innerText = score;
+        bestScoreDisplay.innerText = `BEST: ${highScore}`;
+        highScoreVal.innerText = `BEST: ${highScore}`;
     }
 
-    function updateWeather() {
-        // Change weather based on score
-        if (score >= 30) {
-            if (weatherMode !== 'STORM') { weatherMode = 'STORM'; playSfx(50, 'sine', 1, 0.3); }
-            weatherVal.innerText = "⚡ STORM";
-            weatherVal.style.color = "#f43f5e";
-        } else if (score >= 10) {
-            weatherMode = 'RAIN';
-            weatherVal.innerText = "🌧 RAIN";
-            weatherVal.style.color = "#60a5fa";
-        } else {
-            weatherMode = 'CLEAR';
-            weatherVal.innerText = "☀️ CLEAR";
-            weatherVal.style.color = "#fbbf24";
-        }
+    function updateAtmosphere() {
+        if (score < 5) timeOfDay = 'day';
+        else if (score < 15) timeOfDay = 'sunset';
+        else timeOfDay = 'night';
 
-        // Spawn weather effects
-        if (weatherMode === 'RAIN' || weatherMode === 'STORM') {
-            let density = weatherMode === 'STORM' ? 3 : 1;
-            for(let i=0; i<density; i++) {
-                weatherParticles.push({
-                    x: Math.random() * canvas.width,
-                    y: -10,
-                    l: 10 + Math.random() * 20,
-                    v: 10 + Math.random() * 10
-                });
-            }
+        if (score % 15 === 0 && score > 0) {
+            const rand = Math.random();
+            if (rand < 0.4) weatherType = 'clear';
+            else if (rand < 0.7) weatherType = 'rain';
+            else weatherType = 'snow';
         }
+        weatherLabel.innerText = `${timeOfDay.toUpperCase()} / ${weatherType.toUpperCase()}`;
+    }
 
-        // Random Lightning in Storm
-        if (weatherMode === 'STORM' && Math.random() < 0.01) {
-            flashOpacity = 0.5;
-            playSfx(60, 'sawtooth', 0.4, 0.05);
+    function spawnWeather() {
+        if (weatherType === 'clear' || isDying) return;
+        if (frame % 2 === 0) {
+            weatherParticles.push({
+                x: Math.random() * canvas.width,
+                y: -10,
+                vy: weatherType === 'rain' ? 12 : 3,
+                vx: weatherType === 'rain' ? 1 : (Math.random() - 0.5) * 2,
+                size: weatherType === 'rain' ? 1 : 3
+            });
         }
     }
 
-    function drawWeather() {
-        if (weatherMode === 'RAIN' || weatherMode === 'STORM') {
-            ctx.strokeStyle = weatherMode === 'STORM' ? 'rgba(200, 230, 255, 0.4)' : 'rgba(174, 194, 224, 0.3)';
-            ctx.lineWidth = 1;
-            for(let i=weatherParticles.length-1; i>=0; i--) {
-                let p = weatherParticles[i];
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p.x - 2, p.y + p.l);
-                ctx.stroke();
-                p.y += p.v;
-                p.x -= 2; // Wind effect
-                if (p.y > canvas.height) weatherParticles.splice(i, 1);
-            }
-        }
-
-        if (flashOpacity > 0) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${flashOpacity})`;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            flashOpacity *= 0.9;
-        }
-    }
-
-    function updateParticles() {
-        for(let i=particles.length-1; i>=0; i--) {
-            let p = particles[i];
-            p.x += p.vx; p.y += p.vy; p.life -= 0.03;
-            if (p.life <= 0) particles.splice(i, 1);
-            else {
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
-            }
-        }
-        ctx.globalAlpha = 1.0;
-    }
-
-    function updateDifficulty() {
-        if (score >= 40) { difficulty = 2.2; diffVal.innerText = "OVERDRIVE"; diffVal.style.color = "#ff4444"; }
-        else if (score >= 20) { difficulty = 1.6; diffVal.innerText = "VETERAN"; diffVal.style.color = "#f43f5e"; }
-        else if (score >= 10) { difficulty = 1.3; diffVal.innerText = "PRO"; diffVal.style.color = "#3498db"; }
-        else { difficulty = 1.0; diffVal.innerText = "ROOKIE"; diffVal.style.color = "#fbbf24"; }
+    function drawToilet(y) {
+        ctx.save();
+        ctx.translate(player.x + 40, y);
+        // Toilet Tank
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(-40, -100, 80, 60);
+        // Toilet Bowl
+        ctx.beginPath();
+        ctx.ellipse(0, -20, 60, 40, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 5;
+        ctx.stroke();
+        // Hole
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.ellipse(0, -20, 35, 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
     }
 
     function update() {
         if (!isPlaying) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
         frame++;
-        updateDifficulty();
-        updateWeather();
 
-        // Dynamic Background based on weather
-        let bg1 = weatherMode === 'CLEAR' ? '#0ea5e9' : (weatherMode === 'RAIN' ? '#334155' : '#0f172a');
-        let bg2 = weatherMode === 'CLEAR' ? '#38bdf8' : (weatherMode === 'RAIN' ? '#475569' : '#1e293b');
-        let sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        sky.addColorStop(0, bg1); sky.addColorStop(1, bg2);
-        ctx.fillStyle = sky; ctx.fillRect(0,0, canvas.width, canvas.height);
+        // 1. Death Animation Overrides
+        if (isDying) {
+            deathFrame++;
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0,0, canvas.width, canvas.height);
 
-        // Physics
-        player.vy += 0.45; player.y += player.vy;
-        
-        // Spawn Pipes
-        let spawnRate = Math.max(35, 90 - (score * 2.5));
-        if (frame % Math.floor(spawnRate) === 0) {
-            let gap = Math.max(220, 300 - (score * 4)); 
-            let h = Math.random() * (canvas.height - gap - 160) + 80;
-            entities.push({ x: canvas.width, y: 0, w: 90, h: h, type: 'pipe' });
-            entities.push({ x: canvas.width, y: h + gap, w: 90, h: canvas.height, type: 'pipe' });
-        }
+            // Toilet rises
+            if (deathFrame < 50) toiletY -= (toiletY - (player.y + 100)) * 0.1;
+            drawToilet(toiletY);
 
-        // Update Pipes
-        entities.forEach((p, i) => {
-            p.x -= (4.5 * difficulty);
-            
-            let colorMain = weatherMode === 'STORM' ? '#3f3f46' : '#10b981';
-            let colorMid = weatherMode === 'STORM' ? '#71717a' : '#34d399';
-            
-            let grad = ctx.createLinearGradient(p.x, 0, p.x + p.w, 0);
-            grad.addColorStop(0, colorMain); grad.addColorStop(0.5, colorMid); grad.addColorStop(1, colorMain);
-            ctx.fillStyle = grad;
-            ctx.fillRect(p.x, p.y, p.w, p.h);
-            ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 4; ctx.strokeRect(p.x, p.y, p.w, p.h);
-
-            // Collision
-            const bx = 42; const by = 38;
-            if (player.x + bx < p.x + p.w && player.x + player.w - bx > p.x &&
-                player.y + by < p.y + p.h && player.y + player.h - by > p.y) {
-                gameOver();
+            // Bird falls into toilet
+            if (deathFrame > 50 && deathFrame < 100) {
+                player.y += (toiletY - 40 - player.y) * 0.1;
+                player.scale *= 0.95;
+                player.rot += 0.5;
             }
-            
-            if (p.x + p.w < 0) {
-                entities.splice(i, 1);
-                if (i % 2 === 0) { 
-                    score++; scoreVal.innerText = score; 
-                    playSfx(800, 'sine', 0.1, 0.05); 
+
+            // Flush effect
+            if (deathFrame === 100) {
+                playSfx(150, 'white', 1.5, 0.3, false); // Flush sound
+            }
+            if (deathFrame > 100) {
+                player.alpha *= 0.8;
+                // Vortex
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                for(let i=0; i<5; i++) {
+                    ctx.beginPath();
+                    let r = (deathFrame - 100) * 5 + (i * 20);
+                    ctx.arc(player.x + 40, toiletY - 40, r % 100, deathFrame*0.1, deathFrame*0.1 + Math.PI);
+                    ctx.stroke();
                 }
             }
-        });
 
-        if (player.y + player.h > canvas.height || player.y < -200) gameOver();
-
-        // Draw Weather particles behind player
-        drawWeather();
-
-        // Draw Player
-        ctx.save();
-        let rot = Math.min(Math.PI/4, Math.max(-Math.PI/4, player.vy * 0.1));
-        ctx.translate(player.x + player.w/2, player.y + player.h/2);
-        ctx.rotate(rot);
-        if (birdLoaded) {
-            ctx.drawImage(birdImg, -player.w/2, -player.h/2, player.w, player.h);
+            if (deathFrame > 160) showGameOver();
         } else {
-            ctx.fillStyle = 'yellow'; ctx.fillRect(-player.w/2, -player.h/2, player.w, player.h);
+            // 2. Normal Gameplay Background
+            let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            if (superMode) {
+                bgGrad.addColorStop(0, '#f59e0b'); bgGrad.addColorStop(1, '#78350f');
+            } else if (timeOfDay === 'day') {
+                bgGrad.addColorStop(0, '#7dd3fc'); bgGrad.addColorStop(1, '#bae6fd');
+            } else if (timeOfDay === 'sunset') {
+                bgGrad.addColorStop(0, '#f97316'); bgGrad.addColorStop(1, '#4c1d95');
+            } else {
+                bgGrad.addColorStop(0, '#020617'); bgGrad.addColorStop(1, '#1e1b4b');
+            }
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            spawnWeather();
+            ctx.fillStyle = weatherType === 'rain' ? 'rgba(186, 230, 253, 0.6)' : 'white';
+            for(let i = weatherParticles.length - 1; i >= 0; i--) {
+                let p = weatherParticles[i];
+                p.x += p.vx; p.y += p.vy;
+                if (weatherType === 'rain') ctx.fillRect(p.x, p.y, 1, 12);
+                else { ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); }
+                if (p.y > canvas.height) weatherParticles.splice(i, 1);
+            }
+
+            // 3. Physics & Super Mode
+            player.vy += 0.38;
+            player.y += player.vy;
+
+            if (superMode) {
+                superTimer--;
+                if (superTimer <= 0) {
+                    superMode = false;
+                    superBadge.style.display = 'none';
+                }
+            }
+
+            // 4. Entities
+            if (frame % 100 === 0) {
+                let gap = superMode ? 350 : 220; 
+                let h = Math.random() * (canvas.height - gap - 200) + 100;
+                entities.push({ x: canvas.width, y: 0, w: 80, h: h, passed: false });
+                entities.push({ x: canvas.width, y: h + gap, w: 80, h: canvas.height - (h+gap) });
+            }
+
+            if (frame % 450 === 0 && !superMode) {
+                powerUps.push({ x: canvas.width, y: 200 + Math.random() * 200, r: 40, angle: 0 });
+            }
+
+            // Bubble
+            for(let i = powerUps.length - 1; i >= 0; i--) {
+                let s = powerUps[i];
+                s.x -= 3.5;
+                s.angle += 0.08;
+                let bob = Math.sin(s.angle) * 12;
+                ctx.save();
+                ctx.translate(s.x, s.y + bob);
+                let g = ctx.createRadialGradient(0,0,0,0,0,s.r);
+                g.addColorStop(0, 'rgba(255,215,0,0.4)'); g.addColorStop(1, 'rgba(255,255,255,0.1)');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.arc(0,0,s.r,0,Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+                if (ajithImg.complete) {
+                    ctx.beginPath(); ctx.arc(0,0,s.r-5,0,Math.PI*2); ctx.clip();
+                    ctx.drawImage(ajithImg, -s.r, -s.r, s.r*2, s.r*2);
+                }
+                ctx.restore();
+
+                if (Math.hypot(player.x + 40 - s.x, player.y + 40 - (s.y + bob)) < 65) {
+                    powerUps.splice(i, 1);
+                    superMode = true;
+                    superTimer = 400;
+                    superBadge.style.display = 'block';
+                    playSfx(800, 'square', 0.3);
+                }
+            }
+
+            // Pipes
+            for(let i = entities.length - 1; i >= 0; i--) {
+                let p = entities[i];
+                p.x -= superMode ? 7 : 3.8;
+                ctx.fillStyle = timeOfDay === 'night' ? '#1e293b' : '#334155';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.strokeStyle = superMode ? 'gold' : 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = superMode ? 4 : 1;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+
+                if (!superMode) {
+                    const m = 30;
+                    if (player.x + m < p.x + p.w && player.x + player.w - m > p.x &&
+                        player.y + m < p.y + p.h && player.y + player.h - m > p.y) triggerDeath();
+                }
+
+                if (!p.passed && p.x + p.w < player.x) {
+                    p.passed = true;
+                    if (i % 2 === 0) {
+                        score++; scoreVal.innerText = score;
+                        updateAtmosphere();
+                        playSfx(700, 'sine', 0.1);
+                    }
+                }
+                if (p.x < -100) entities.splice(i, 1);
+            }
+
+            if (player.y + player.h > canvas.height || player.y < -250) triggerDeath();
+        }
+
+        // 5. Final Render Player
+        ctx.save();
+        ctx.globalAlpha = player.alpha;
+        let pRot = isDying ? player.rot : Math.min(Math.PI/6, Math.max(-Math.PI/6, player.vy * 0.1));
+        ctx.translate(player.x + player.w/2, player.y + player.h/2);
+        ctx.rotate(pRot);
+        ctx.scale(player.scale, player.scale);
+        
+        if (superMode) {
+            ctx.shadowBlur = 30; ctx.shadowColor = 'gold';
+            let s = 1 + Math.sin(frame*0.2)*0.1;
+            ctx.scale(s, s);
+        }
+
+        let curImg = superMode ? ajithImg : birdImg;
+        if (curImg.complete) {
+            ctx.drawImage(curImg, -player.w/2, -player.h/2, player.w, player.h);
+        } else {
+            ctx.fillStyle = superMode ? 'gold' : 'yellow';
+            ctx.fillRect(-player.w/2, -player.h/2, player.w, player.h);
         }
         ctx.restore();
 
-        updateParticles();
         requestAnimationFrame(update);
     }
 </script>
