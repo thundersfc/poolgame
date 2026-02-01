@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Poolix Arcade</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --accent: #f43f5e;
+            --gold: #fbbf24;
+            --success: #10b981;
+        }
+        body { 
+            margin: 0; 
+            padding: 0;
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background: var(--bg); 
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+        }
+        #game-wrapper {
+            position: relative;
+            background: #000;
+            border: 4px solid #334155;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            width: 95vw;
+            max-width: 400px;
+            aspect-ratio: 2/3;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        .hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 5;
+        }
+        .score-container {
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            padding: 5px 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .score { font-size: 52px; font-weight: 900; color: #fff; text-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .difficulty-tag { font-size: 14px; text-transform: uppercase; letter-spacing: 3px; color: var(--gold); font-weight: 800; margin-bottom: 4px; }
+        
+        .menu-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            background: var(--surface);
+            padding: 12px;
+            border-radius: 50px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        .menu-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: 1px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .menu-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(52, 152, 219, 0.5);
+        }
+
+        #overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            padding: 30px;
+        }
+        #overlay h2 { font-size: 48px; margin: 0; background: linear-gradient(to right, #60a5fa, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        #overlay p { font-size: 18px; margin: 15px 0 35px; color: #94a3b8; line-height: 1.5; }
+        .start-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 20px 50px;
+            font-size: 24px;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 10px 25px rgba(244, 63, 94, 0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .start-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(244, 63, 94, 0.5); }
+        .start-btn:active { transform: scale(0.95); }
+        .controls-hint { margin-top: 30px; font-size: 14px; color: #475569; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <div id="game-wrapper">
+        <div id="overlay">
+            <h2 id="msg-title">POOL ARCADE</h2>
+            <p id="msg-desc">The ultimate two-game challenge!</p>
+            <button class="start-btn" onclick="startGame()">START PLAYING</button>
+            <div class="controls-hint" id="controls-text">Tap, Click or Space to Play</div>
+        </div>
+        <div class="hud">
+            <div class="difficulty-tag" id="difficulty-val">EASY</div>
+            <div class="score-container">
+                <div class="score" id="score-val">0</div>
+            </div>
+        </div>
+        <canvas id="mainCanvas" width="400" height="600"></canvas>
+    </div>
+
+    <div class="menu-bar">
+        <button class="menu-btn active" onclick="switchGame('flappy')">FLAPPY</button>
+        <button class="menu-btn" onclick="switchGame('funny')">HUNGRY BIRD</button>
+    </div>
+
+<script>
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreVal = document.getElementById('score-val');
+    const diffVal = document.getElementById('difficulty-val');
+    const overlay = document.getElementById('overlay');
+    const msgTitle = document.getElementById('msg-title');
+    const msgDesc = document.getElementById('msg-desc');
+
+    // --- Sound System ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx(freq, type, duration, vol = 0.1, ramp = true) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        if (ramp) osc.frequency.exponentialRampToValueAtTime(freq/4, audioCtx.currentTime + duration);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
+
+    const sfx = {
+        jump: () => playSfx(400, 'triangle', 0.1),
+        hit: () => playSfx(120, 'sawtooth', 0.6, 0.2),
+        collect: () => playSfx(900, 'sine', 0.15, 0.05, false),
+        eat: () => playSfx(200, 'sine', 0.1, 0.1)
+    };
+
+    const birdImg = new Image();
+    birdImg.src = 'bird.png';
+    let birdLoaded = false;
+    birdImg.onload = () => birdLoaded = true;
+
+    // Game Variables
+    let currentGame = 'flappy';
+    let isPlaying = false;
+    let score = 0;
+    let frame = 0;
+    let entities = [];
+    let particles = [];
+    // MUCH BIGGER BIRD: Increased base w and h
+    let player = { x: 50, y: 300, w: 140, h: 140, vy: 0, vx: 0, scale: 1, targetX: 150, targetY: 300 };
+    let keys = {};
+    let difficulty = 1;
+
+    // Unified Input Handling
+    window.addEventListener('keydown', e => {
+        keys[e.code] = true;
+        if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) playerAction();
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    // Mouse Controls
+    canvas.addEventListener('mousedown', (e) => {
+        playerAction();
+        updateTargetPosition(e.clientX, e.clientY);
+    });
+    canvas.addEventListener('mousemove', (e) => {
+        if (currentGame === 'funny') updateTargetPosition(e.clientX, e.clientY);
+    });
+
+    // Touch Controls
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        playerAction();
+        updateTargetPosition(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (currentGame === 'funny') updateTargetPosition(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive: false});
+
+    function updateTargetPosition(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        player.targetX = (clientX - rect.left) * scaleX - (player.w * player.scale) / 2;
+        player.targetY = (clientY - rect.top) * scaleY - (player.h * player.scale) / 2;
+    }
+
+    function playerAction() {
+        if (!isPlaying) return;
+        if (currentGame === 'flappy') {
+            player.vy = -8.5; // Adjusted for larger size
+            sfx.jump();
+        }
+    }
+
+    function switchGame(gameId) {
+        currentGame = gameId;
+        document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.toggle('active', btn.innerText.toLowerCase().includes(gameId === 'funny' ? 'hungry' : gameId)));
+        isPlaying = false;
+        overlay.style.display = 'flex';
+        msgTitle.innerText = gameId === 'flappy' ? "FLAPPY BIRD" : "HUNGRY BIRD";
+        msgDesc.innerText = gameId === 'flappy' ? "Giant Bird Flight! Avoid the obstacles." : "Drag the Giant Bird! Eat junk food, avoid broccoli.";
+        resetGame();
+    }
+
+    function resetGame() {
+        score = 0; frame = 0; entities = []; particles = []; difficulty = 1;
+        scoreVal.innerText = "0"; diffVal.innerText = "EASY";
+        player.w = 140; player.h = 140; player.scale = 1;
+        if (currentGame === 'flappy') {
+            player.x = 50; player.y = 200; player.vy = 0;
+        } else if (currentGame === 'funny') {
+            player.x = 130; player.y = 230; player.vx = 0; player.vy = 0; player.speed = 10;
+            player.targetX = player.x; player.targetY = player.y;
+        }
+    }
+
+    function startGame() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        resetGame(); isPlaying = true;
+        overlay.style.display = 'none';
+        requestAnimationFrame(update);
+    }
+
+    function gameOver() {
+        if (!isPlaying) return;
+        isPlaying = false; sfx.hit();
+        overlay.style.display = 'flex';
+        msgTitle.innerText = "GAME OVER";
+        msgDesc.innerText = `Final Score: ${score}`;
+    }
+
+    function spawnParticle(x, y, color) {
+        for(let i=0; i<12; i++) {
+            particles.push({
+                x, y, 
+                vx: (Math.random()-0.5)*15, 
+                vy: (Math.random()-0.5)*15, 
+                life: 1.0, 
+                color
+            });
+        }
+    }
+
+    function updateParticles() {
+        for(let i=particles.length-1; i>=0; i--) {
+            let p = particles[i];
+            p.x += p.vx; p.y += p.vy; p.life -= 0.04;
+            if (p.life <= 0) particles.splice(i, 1);
+            else {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+        ctx.globalAlpha = 1.0;
+    }
+
+    function updateDifficulty() {
+        if (score >= 40) { difficulty = 2.4; diffVal.innerText = "EXTREME"; diffVal.style.color = "#ff0000"; }
+        else if (score >= 20) { difficulty = 1.8; diffVal.innerText = "HARD"; diffVal.style.color = "#f43f5e"; }
+        else if (score >= 10) { difficulty = 1.3; diffVal.innerText = "MEDIUM"; diffVal.style.color = "#3498db"; }
+        else { difficulty = 1.0; diffVal.innerText = "EASY"; diffVal.style.color = "#fbbf24"; }
+    }
+
+    function drawPlayer() {
+        ctx.save();
+        let displayW = player.w * player.scale;
+        let displayH = player.h * player.scale;
+        
+        if (currentGame === 'flappy') {
+            let rot = Math.min(Math.PI/4, Math.max(-Math.PI/4, player.vy * 0.1));
+            ctx.translate(player.x + displayW/2, player.y + displayH/2);
+            ctx.rotate(rot);
+            if (birdLoaded) ctx.drawImage(birdImg, -displayW/2, -displayH/2, displayW, displayH);
+            else { ctx.fillStyle = 'yellow'; ctx.fillRect(-displayW/2, -displayH/2, displayW, displayH); }
+        } else {
+            let wobble = Math.sin(frame * 0.1) * 8 * player.scale;
+            if (birdLoaded) ctx.drawImage(birdImg, player.x, player.y + wobble, displayW, displayH);
+            else { ctx.fillStyle = 'yellow'; ctx.fillRect(player.x, player.y + wobble, displayW, displayH); }
+        }
+        ctx.restore();
+    }
+
+    function update() {
+        if (!isPlaying) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        frame++;
+        updateDifficulty();
+
+        if (currentGame === 'flappy') updateFlappy();
+        else updateFunny();
+        
+        updateParticles();
+        requestAnimationFrame(update);
+    }
+
+    // --- GAME 1: FLAPPY ---
+    function updateFlappy() {
+        let sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        sky.addColorStop(0, '#0ea5e9'); sky.addColorStop(1, '#38bdf8');
+        ctx.fillStyle = sky; ctx.fillRect(0,0, canvas.width, canvas.height);
+
+        player.vy += 0.45; player.y += player.vy;
+        
+        let spawnRate = Math.max(35, 80 - (score * 2.5));
+        if (frame % Math.floor(spawnRate) === 0) {
+            let gap = Math.max(220, 280 - (score * 4)); // Widened for larger bird
+            let h = Math.random() * (canvas.height - gap - 160) + 80;
+            entities.push({ x: canvas.width, y: 0, w: 80, h: h, type: 'pipe' });
+            entities.push({ x: canvas.width, y: h + gap, w: 80, h: canvas.height, type: 'pipe' });
+        }
+
+        entities.forEach((p, i) => {
+            p.x -= (4 * difficulty);
+            let grad = ctx.createLinearGradient(p.x, 0, p.x + p.w, 0);
+            grad.addColorStop(0, '#10b981'); grad.addColorStop(0.5, '#34d399'); grad.addColorStop(1, '#059669');
+            ctx.fillStyle = grad;
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            ctx.strokeStyle = '#064e3b'; ctx.lineWidth = 4; ctx.strokeRect(p.x, p.y, p.w, p.h);
+
+            // Tighter collision for the big bird
+            const bx = 45;
+            const by = 40;
+            if (player.x + bx < p.x + p.w && player.x + (player.w * player.scale) - bx > p.x &&
+                player.y + by < p.y + p.h && player.y + (player.h * player.scale) - by > p.y) gameOver();
+            
+            if (p.x + p.w < 0) {
+                entities.splice(i, 1);
+                if (i % 2 === 0) { score++; scoreVal.innerText = score; sfx.collect(); }
+            }
+        });
+        if (player.y + (player.h * player.scale) > canvas.height || player.y < -200) gameOver();
+        drawPlayer();
+    }
+
+    // --- GAME 2: FUNNY (HUNGRY BIRD) ---
+    function updateFunny() {
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0, canvas.width, canvas.height);
+        
+        if (frame % 10 === 0) particles.push({ x: canvas.width, y: Math.random()*canvas.height, vx: -3, vy: 0, life: 0.5, color: '#334155' });
+
+        // Smooth Keyboard Movement
+        if (keys['ArrowUp'] || keys['KeyW']) player.targetY -= player.speed;
+        if (keys['ArrowDown'] || keys['KeyS']) player.targetY += player.speed;
+        if (keys['ArrowLeft'] || keys['KeyA']) player.targetX -= player.speed;
+        if (keys['ArrowRight'] || keys['KeyD']) player.targetX += player.speed;
+
+        // Interpolate to target for smooth feel on both touch & PC
+        player.x += (player.targetX - player.x) * 0.15;
+        player.y += (player.targetY - player.y) * 0.15;
+        
+        let pW = player.w * player.scale;
+        let pH = player.h * player.scale;
+        player.x = Math.max(0, Math.min(canvas.width - pW, player.x));
+        player.y = Math.max(0, Math.min(canvas.height - pH, player.y));
+        player.targetX = Math.max(0, Math.min(canvas.width - pW, player.targetX));
+        player.targetY = Math.max(0, Math.min(canvas.height - pH, player.targetY));
+
+        let spawnRate = Math.max(12, 45 - (score));
+        if (frame % Math.floor(spawnRate) === 0) {
+            let isEnemy = Math.random() > 0.4;
+            entities.push({ 
+                x: canvas.width, 
+                y: Math.random() * (canvas.height - 60), 
+                w: 60, h: 60, 
+                type: isEnemy ? 'danger' : 'food', 
+                speed: (4 + Math.random() * 4) * difficulty,
+                emoji: isEnemy ? '🥦' : (Math.random() > 0.5 ? '🍕' : '🍔')
+            });
+        }
+
+        for (let i = entities.length - 1; i >= 0; i--) {
+            let e = entities[i];
+            e.x -= e.speed;
+            
+            ctx.font = '50px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(e.emoji, e.x + 30, e.y + 30);
+
+            // Buffer for big bird
+            let buffer = 35;
+            if (player.x + buffer < e.x + e.w && player.x + pW - buffer > e.x &&
+                player.y + buffer < e.y + e.h && player.y + pH - buffer > e.y) {
+                
+                if (e.type === 'food') {
+                    entities.splice(i, 1);
+                    score++; scoreVal.innerText = score;
+                    player.scale = Math.min(2.0, player.scale + 0.03); 
+                    sfx.eat();
+                    spawnParticle(e.x+30, e.y+30, '#fbbf24');
+                } else {
+                    gameOver();
+                }
+            }
+            if (e.x < -100) entities.splice(i, 1);
+        }
+        drawPlayer();
+    }
+
+</script>
+</body>
+</html>
